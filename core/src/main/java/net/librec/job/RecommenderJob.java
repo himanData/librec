@@ -27,8 +27,10 @@ import net.librec.eval.Measure.MeasureValue;
 import net.librec.eval.RecommenderEvaluator;
 import net.librec.filter.RecommendedFilter;
 import net.librec.math.algorithm.Randoms;
+import net.librec.math.structure.SparseMatrix;
 import net.librec.recommender.Recommender;
 import net.librec.recommender.RecommenderContext;
+import net.librec.recommender.item.ItemEntry;
 import net.librec.recommender.item.RecommendedItem;
 import net.librec.similarity.RecommenderSimilarity;
 import net.librec.util.DriverClassUtil;
@@ -40,10 +42,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * RecommenderJob
@@ -145,7 +144,7 @@ public class RecommenderJob {
         executeEvaluator(recommender);
         List<RecommendedItem> recommendedList = recommender.getRecommendedList();
         recommendedList = filterResult(recommendedList);
-        saveResult(recommendedList);
+        saveResult(recommendedList, context);
     }
 
     /**
@@ -253,7 +252,7 @@ public class RecommenderJob {
      * @throws IOException            if I/O error occurs
      * @throws ClassNotFoundException if class not found error occurs
      */
-    public void saveResult(List<RecommendedItem> recommendedList) throws LibrecException, IOException, ClassNotFoundException {
+    public void saveResult(List<RecommendedItem> recommendedList, RecommenderContext context) throws LibrecException, IOException, ClassNotFoundException {
         if (recommendedList != null && recommendedList.size() > 0) {
             // make output path
             String algoSimpleName = DriverClassUtil.getDriverName(getRecommenderClass());
@@ -264,12 +263,22 @@ public class RecommenderJob {
             LOG.info("Result path is " + outputPath);
             // convert itemList to string
             StringBuilder sb = new StringBuilder();
+
+
+            int h=0;
             for (RecommendedItem recItem : recommendedList) {
                 String userId = recItem.getUserId();
                 String itemId = recItem.getItemId();
                 String value = String.valueOf(recItem.getValue());
-                sb.append(userId).append(",").append(itemId).append(",").append(value).append("\n");
+
+                if (context.getDataModel().getDataSplitter().getTestData().getColumnsSet(dataModel.getUserMappingData().get(userId)).contains(dataModel.getItemMappingData().get(itemId))) {
+                    sb.append(userId).append(",").append(itemId).append(",").append(value).append(",").append("T").append("\n");
+                    h++;
+                }
+                else
+                    sb.append(userId).append(",").append(itemId).append(",").append(value).append("\n");
             }
+            System.out.println("Himan="+ (float) h/recommendedList.size());
             String resultData = sb.toString();
             // save resultData
             try {

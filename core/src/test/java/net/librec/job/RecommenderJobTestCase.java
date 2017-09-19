@@ -19,6 +19,7 @@ package net.librec.job;
 
 import net.librec.BaseTestCase;
 import net.librec.common.LibrecException;
+import net.librec.recommender.RecommenderContext;
 import net.librec.recommender.item.GenericRecommendedItem;
 import net.librec.recommender.item.RecommendedItem;
 import org.junit.Before;
@@ -68,7 +69,7 @@ public class RecommenderJobTestCase extends BaseTestCase {
 	public void testSaveResult1() throws LibrecException, IOException, ClassNotFoundException {
 		conf.set("rec.recommender.class", "aobpr");
 		conf.set("dfs.result.dir", "../result");
-		recommenderJob.saveResult(recommendedItemList);
+		recommenderJob.saveResult(recommendedItemList,new RecommenderContext(conf));
 	}
 
 	/**
