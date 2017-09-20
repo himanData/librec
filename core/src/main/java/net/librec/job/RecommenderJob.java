@@ -73,12 +73,9 @@ public class RecommenderJob {
     /**
      * run Job
      *
-     * @throws LibrecException
-     *             If an LibrecException error occurs.
-     * @throws ClassNotFoundException
-     *             if can't find the class of filter
-     * @throws IOException
-     *             If an I/O error occurs.
+     * @throws LibrecException        If an LibrecException error occurs.
+     * @throws ClassNotFoundException if can't find the class of filter
+     * @throws IOException            If an I/O error occurs.
      */
     public void runJob() throws LibrecException, ClassNotFoundException, IOException {
         String modelSplit = conf.get("data.model.splitter");
@@ -109,7 +106,7 @@ public class RecommenderJob {
                 }
                 break;
             }
-            case "testset":{
+            case "testset": {
                 executeRecommenderJob();
                 break;
             }
@@ -127,12 +124,9 @@ public class RecommenderJob {
     /**
      * execute Recommender Job
      *
-     * @throws LibrecException
-     *             If an LibrecException error occurs.
-     * @throws ClassNotFoundException
-     *             if can't find the class of filter
-     * @throws IOException
-     *             If an I/O error occurs.
+     * @throws LibrecException        If an LibrecException error occurs.
+     * @throws ClassNotFoundException if can't find the class of filter
+     * @throws IOException            If an I/O error occurs.
      */
     @SuppressWarnings("unchecked")
     private void executeRecommenderJob() throws ClassNotFoundException, LibrecException, IOException {
@@ -171,12 +165,12 @@ public class RecommenderJob {
     private void generateSimilarity(RecommenderContext context) {
         String[] similarityKeys = conf.getStrings("rec.recommender.similarities");
         if (similarityKeys != null && similarityKeys.length > 0) {
-            for(int i = 0; i< similarityKeys.length; i++){
+            for (int i = 0; i < similarityKeys.length; i++) {
                 if (getSimilarityClass() != null) {
                     RecommenderSimilarity similarity = (RecommenderSimilarity) ReflectionUtil.newInstance(getSimilarityClass(), conf);
                     conf.set("rec.recommender.similarity.key", similarityKeys[i]);
                     similarity.buildSimilarityMatrix(dataModel);
-                    if(i == 0){
+                    if (i == 0) {
                         context.setSimilarity(similarity);
                     }
                     context.addSimilarities(similarityKeys[i], similarity);
@@ -188,7 +182,7 @@ public class RecommenderJob {
     /**
      * Filter the results.
      *
-     * @param recommendedList  list of recommended items
+     * @param recommendedList list of recommended items
      * @return recommended List
      * @throws ClassNotFoundException
      * @throws IOException
@@ -204,7 +198,7 @@ public class RecommenderJob {
     /**
      * Execute evaluator.
      *
-     * @param recommender  recommender algorithm
+     * @param recommender recommender algorithm
      * @throws LibrecException        if error occurs
      * @throws IOException            if I/O error occurs
      * @throws ClassNotFoundException if class not found error occurs
@@ -212,9 +206,9 @@ public class RecommenderJob {
     private void executeEvaluator(Recommender recommender) throws ClassNotFoundException, IOException, LibrecException {
         if (conf.getBoolean("rec.eval.enable")) {
             String[] evalClassKeys = conf.getStrings("rec.eval.classes");
-            if (evalClassKeys!= null && evalClassKeys.length > 0) {// Run the evaluator which is
+            if (evalClassKeys != null && evalClassKeys.length > 0) {// Run the evaluator which is
                 // designated.
-                for(int classIdx = 0; classIdx < evalClassKeys.length; ++classIdx) {
+                for (int classIdx = 0; classIdx < evalClassKeys.length; ++classIdx) {
                     RecommenderEvaluator evaluator = (RecommenderEvaluator) ReflectionUtil.newInstance(getEvaluatorClass(evalClassKeys[classIdx]), null);
                     evaluator.setTopN(conf.getInt("rec.recommender.ranking.topn", 10));
                     double evalValue = recommender.evaluate(evaluator);
@@ -247,7 +241,7 @@ public class RecommenderJob {
     /**
      * Save result.
      *
-     * @param recommendedList         list of recommended items
+     * @param recommendedList list of recommended items
      * @throws LibrecException        if error occurs
      * @throws IOException            if I/O error occurs
      * @throws ClassNotFoundException if class not found error occurs
@@ -265,20 +259,20 @@ public class RecommenderJob {
             StringBuilder sb = new StringBuilder();
 
 
-            int h=0;
+            int h = 0;
             for (RecommendedItem recItem : recommendedList) {
                 String userId = recItem.getUserId();
                 String itemId = recItem.getItemId();
                 String value = String.valueOf(recItem.getValue());
+                double true_rating = context.getDataModel().getDataSplitter().getTestData().get(dataModel.getUserMappingData().get(userId), dataModel.getItemMappingData().get(itemId));
 
-                if (context.getDataModel().getDataSplitter().getTestData().getColumnsSet(dataModel.getUserMappingData().get(userId)).contains(dataModel.getItemMappingData().get(itemId))) {
-                    sb.append(userId).append(",").append(itemId).append(",").append(value).append(",").append("T").append("\n");
+               if (dataModel.getDataSplitter().getTestData().getColumnsSet(dataModel.getUserMappingData().get(userId)).contains(Integer.valueOf(itemId)) ) {
+                   sb.append(userId).append(",").append(itemId).append(",").append(value).append(",").append(String.valueOf(true_rating)).append(",").append("T").append("\n");
                     h++;
-                }
-                else
-                    sb.append(userId).append(",").append(itemId).append(",").append(value).append("\n");
+                } else
+                    sb.append(userId).append(",").append(itemId).append(",").append(value).append(",").append(String.valueOf(true_rating)).append(",").append("F").append("\n");
             }
-            System.out.println("Himan="+ (float) h/recommendedList.size());
+            System.out.println("Himan =" + (float) h / recommendedList.size());
             String resultData = sb.toString();
             // save resultData
             try {
@@ -309,8 +303,8 @@ public class RecommenderJob {
     /**
      * Collect the evaluate results when using cross validation.
      *
-     * @param evalName   name of the evaluator
-     * @param evalValue  value of the evaluate result
+     * @param evalName  name of the evaluator
+     * @param evalValue value of the evaluate result
      */
     private void collectCVResults(String evalName, Double evalValue) {
         DataSplitter splitter = dataModel.getDataSplitter();
@@ -341,10 +335,8 @@ public class RecommenderJob {
      * Get data model class.
      *
      * @return {@code Class<? extends DataModel>} object
-     * @throws ClassNotFoundException
-     *             if the class is not found
-     * @throws IOException
-     *             If an I/O error occurs.
+     * @throws ClassNotFoundException if the class is not found
+     * @throws IOException            If an I/O error occurs.
      */
     @SuppressWarnings("unchecked")
     public Class<? extends DataModel> getDataModelClass() throws ClassNotFoundException, IOException {
@@ -369,10 +361,8 @@ public class RecommenderJob {
      * Get recommender class. {@code Recommender}.
      *
      * @return recommender class object
-     * @throws ClassNotFoundException
-     *             if can't find the class of recommender
-     * @throws IOException
-     *             If an I/O error occurs.
+     * @throws ClassNotFoundException if can't find the class of recommender
+     * @throws IOException            If an I/O error occurs.
      */
     @SuppressWarnings("unchecked")
     public Class<? extends Recommender> getRecommenderClass() throws ClassNotFoundException, IOException {
@@ -382,13 +372,10 @@ public class RecommenderJob {
     /**
      * Get evaluator class. {@code RecommenderEvaluator}.
      *
-     * @param evalClassKey
-     *             class key of the evaluator
+     * @param evalClassKey class key of the evaluator
      * @return evaluator class object
-     * @throws ClassNotFoundException
-     *             if can't find the class of evaluator
-     * @throws IOException
-     *             If an I/O error occurs.
+     * @throws ClassNotFoundException if can't find the class of evaluator
+     * @throws IOException            If an I/O error occurs.
      */
     @SuppressWarnings("unchecked")
     public Class<? extends RecommenderEvaluator> getEvaluatorClass(String evalClassKey) throws ClassNotFoundException, IOException {
@@ -399,10 +386,8 @@ public class RecommenderJob {
      * Get filter class. {@code RecommendedFilter}.
      *
      * @return evaluator class object
-     * @throws ClassNotFoundException
-     *             if can't find the class of filter
-     * @throws IOException
-     *             If an I/O error occurs.
+     * @throws ClassNotFoundException if can't find the class of filter
+     * @throws IOException            If an I/O error occurs.
      */
     @SuppressWarnings("unchecked")
     public Class<? extends RecommendedFilter> getFilterClass() throws ClassNotFoundException, IOException {
