@@ -264,13 +264,8 @@ public class RecommenderJob {
                 String userId = recItem.getUserId();
                 String itemId = recItem.getItemId();
                 String value = String.valueOf(recItem.getValue());
-                double true_rating = context.getDataModel().getDataSplitter().getTestData().get(dataModel.getUserMappingData().get(userId), dataModel.getItemMappingData().get(itemId));
 
-               if (dataModel.getDataSplitter().getTestData().getColumnsSet(dataModel.getUserMappingData().get(userId)).contains(Integer.valueOf(itemId)) ) {
-                   sb.append(userId).append(",").append(itemId).append(",").append(value).append(",").append(String.valueOf(true_rating)).append(",").append("T").append("\n");
-                    h++;
-                } else
-                    sb.append(userId).append(",").append(itemId).append(",").append(value).append(",").append(String.valueOf(true_rating)).append(",").append("F").append("\n");
+                   sb.append(userId).append(",").append(itemId).append(",").append(value).append("\n");
             }
             System.out.println("Himan =" + (float) h / recommendedList.size());
             String resultData = sb.toString();

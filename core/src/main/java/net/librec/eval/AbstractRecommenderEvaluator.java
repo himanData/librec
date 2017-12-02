@@ -53,31 +53,32 @@ public abstract class AbstractRecommenderEvaluator implements RecommenderEvaluat
     /**
      * Evaluate on the recommender context with the recommended list.
      *
-     * @param context          the recommender context
-     * @param recommendedList  the list of recommended items
-     * @return  evaluate result
+     * @param context         the recommender context
+     * @param recommendedList the list of recommended items
+     * @return evaluate result
      */
     public double evaluate(RecommenderContext context, RecommendedList recommendedList) {
         SparseMatrix testMatrix = context.getDataModel().getDataSplitter().getTestData();
+        SparseMatrix trainMatrix = context.getDataModel().getDataSplitter().getTrainData();
+
         conf = context.getConf();
         String[] similarityKeys = conf.getStrings("rec.recommender.similarities");
         if (similarityKeys != null && similarityKeys.length > 0) {
             similarityMatrix = context.getSimilarity().getSimilarityMatrix();
             similarities = context.getSimilarities();
         }
-        return evaluate(testMatrix, recommendedList);
+        return evaluate(trainMatrix, testMatrix, recommendedList);
     }
 
     /**
      * Evaluate on the test set with the the list of recommended items.
      *
-     * @param testMatrix
-     *            the given test set
-     * @param recommendedList
-     *            the list of recommended items
+     * @param testMatrix      the given test set
+     * @param recommendedList the list of recommended items
      * @return evaluate result
      */
-    public abstract double evaluate(SparseMatrix testMatrix, RecommendedList recommendedList);
+
+    public abstract double evaluate(SparseMatrix trainMatrix, SparseMatrix testMatrix, RecommendedList recommendedList);
 
     /**
      * Set the number of recommended items.

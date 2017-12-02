@@ -46,6 +46,11 @@ public abstract class AbstractRecommender implements Recommender {
     protected final Log LOG = LogFactory.getLog(this.getClass());
 
     /**
+     * is the predicted rating weighted
+     */
+    protected boolean isWeighted_rating_prediction;
+
+    /**
      * is ranking or rating
      */
     protected boolean isRanking;
@@ -227,7 +232,7 @@ public abstract class AbstractRecommender implements Recommender {
      * * predict the ranking scores or ratings in the test data
      *
      * @return predictive ranking score or rating matrix
-     * @throws LibrecException  if error occurs during recommending
+     * @throws LibrecException if error occurs during recommending
      */
     protected RecommendedList recommend() throws LibrecException {
         if (isRanking && topN > 0) {
@@ -248,13 +253,30 @@ public abstract class AbstractRecommender implements Recommender {
     protected RecommendedList recommendRank() throws LibrecException {
         recommendedList = new RecommendedItemList(numUsers - 1, numUsers);
 
+        SparseMatrix trainMatrix = context.getDataModel().getDataSplitter().getTrainData();
+        int numOfUsers = context.getDataModel().getUserMappingData().keySet().size();
+        int numOfItems = context.getDataModel().getItemMappingData().keySet().size();
+        float priority_weight = conf.getFloat("item_priority_weight");
+        List<Float> item_priorityList = new ArrayList<>();
+
+        for (int itemIdx = 0; itemIdx < numItems; ++itemIdx) {
+            if (trainMatrix.columnSize(itemIdx)>100)
+                item_priorityList.add((float)1.0);
+            else if (trainMatrix.columnSize(itemIdx)<=100 && trainMatrix.columnSize(itemIdx)>6)
+                item_priorityList.add((float)5.0);
+            else item_priorityList.add((float)2.0);
+
+        }
+
         for (int userIdx = 0; userIdx < numUsers; ++userIdx) {
             Set<Integer> itemSet = trainMatrix.getColumnsSet(userIdx);
             for (int itemIdx = 0; itemIdx < numItems; ++itemIdx) {
                 if (itemSet.contains(itemIdx)) {
                     continue;
                 }
-                double predictRating = predict(userIdx, itemIdx);
+
+               double predictRating = predict(userIdx, itemIdx);
+               //double predictRating = (1 - priority_weight) * predict(userIdx, itemIdx) + priority_weight * item_priorityList.get(itemIdx);
                 if (Double.isNaN(predictRating)) {
                     continue;
                 }
@@ -263,7 +285,7 @@ public abstract class AbstractRecommender implements Recommender {
             recommendedList.topNRankItemsByUser(userIdx, topN);
         }
 
-        if(recommendedList.size()==0){
+        if (recommendedList.size() == 0) {
             throw new IndexOutOfBoundsException("No item is recommended, there is something error in the recommendation algorithm! Please check it!");
         }
 
@@ -312,7 +334,7 @@ public abstract class AbstractRecommender implements Recommender {
      *
      * @param userIdx user index
      * @param itemIdx item index
-     * @param bound whether there is a bound
+     * @param bound   whether there is a bound
      * @return predictive rating for user userIdx on item itemIdx with bound
      * @throws LibrecException if error occurs during predicting
      */
@@ -452,11 +474,12 @@ public abstract class AbstractRecommender implements Recommender {
      * <li>check if converged</li>
      * <li>if not, adjust learning rate</li>
      * </ol>
+     *
      * @param iter current iteration
      * @return boolean: true if it is converged; false otherwise
      * @throws LibrecException if error occurs
      */
-    protected boolean isConverged(int iter) throws LibrecException{
+    protected boolean isConverged(int iter) throws LibrecException {
         float delta_loss = (float) (lastLoss - loss);
 
         // print out debug info

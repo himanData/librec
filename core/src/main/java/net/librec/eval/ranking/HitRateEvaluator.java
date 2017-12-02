@@ -30,7 +30,7 @@ public class HitRateEvaluator extends AbstractRecommenderEvaluator {
      *            the list of recommended items
      * @return evaluate result
      */
-    public double evaluate(SparseMatrix testMatrix, RecommendedList recommendedList) {
+    public double evaluate(SparseMatrix trainMatrix, SparseMatrix testMatrix, RecommendedList recommendedList) {
 
         if (testMatrix.size() == 0) {
             return 0.0;

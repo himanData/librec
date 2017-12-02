@@ -30,7 +30,7 @@ public class AverageReciprocalHitRankEvaluator extends AbstractRecommenderEvalua
      *            the list of recommended items
      * @return evaluate result
      */
-    public double evaluate(SparseMatrix testMatrix, RecommendedList recommendedList) {
+    public double evaluate(SparseMatrix trainMatrix, SparseMatrix testMatrix, RecommendedList recommendedList) {
         double reciprocalRank = 0.0;
         int numUsers = testMatrix.numRows();
         int nonZeroNumUsers = 0;

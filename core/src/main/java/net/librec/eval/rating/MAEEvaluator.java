@@ -33,7 +33,7 @@ import java.util.Iterator;
 
 public class MAEEvaluator extends AbstractRecommenderEvaluator {
 
-    public double evaluate(SparseMatrix testMatrix, RecommendedList recommendedList) {
+    public double evaluate(SparseMatrix trainMatrix, SparseMatrix testMatrix, RecommendedList recommendedList) {
         if (testMatrix == null) {
             return 0.0;
         }

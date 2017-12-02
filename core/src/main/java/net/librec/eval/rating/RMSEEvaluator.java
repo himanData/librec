@@ -31,7 +31,7 @@ import java.util.Iterator;
  * @author WangYuFeng, zhanghaidong and Keqiang Wang
  */
 public class RMSEEvaluator extends AbstractRecommenderEvaluator {
-    public double evaluate(SparseMatrix testMatrix, RecommendedList recommendedList) {
+    public double evaluate(SparseMatrix trainMatrix, SparseMatrix testMatrix, RecommendedList recommendedList) {
         if (testMatrix == null) {
             return 0.0;
         }
